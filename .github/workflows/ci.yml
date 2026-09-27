@@ -74,7 +74,12 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
+      - name: Prepare preinstalled Android SDK
+        shell: bash
+        run: |
+          set -e
+          command -v sdkmanager
+          yes | sdkmanager --licenses >/dev/null
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '9.5.0'

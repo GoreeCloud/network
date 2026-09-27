@@ -18,7 +18,7 @@ The preflight currently accepts only the native client surfaces represented by t
 - Google TV
 - iOS
 
-A request must include a display name, platform identifier, and a non-zero 32-byte base64 public key. Display names are trimmed and bounded to 128 bytes. Platform identifiers are canonicalized to lowercase. Public keys are decoded and re-encoded into canonical base64 form.
+A request must include a display name, platform identifier, and a non-zero 32-byte base64 public key. Display names are trimmed, bounded to 128 bytes, required to be valid UTF-8, and may not contain control characters or Unicode bidirectional-control formatting characters that could make audit or user-interface presentation ambiguous. Ordinary internationalized names remain supported. Platform identifiers are canonicalized to lowercase. Public keys are decoded and re-encoded into canonical base64 form.
 
 A successful result means only `READY_FOR_AUTHORIZED_ENROLLMENT`: the request is structurally eligible to enter a later authenticated enrollment transaction.
 

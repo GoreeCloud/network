@@ -34,6 +34,18 @@ func TestEvaluateAcceptsCanonicalCurrentClientSurface(t *testing.T) {
 	}
 }
 
+func TestEvaluateAcceptsInternationalizedDisplayName(t *testing.T) {
+	key := base64.StdEncoding.EncodeToString(bytes.Repeat([]byte{0x43}, 32))
+	decision := Evaluate(Request{
+		DisplayName: "مطبخ TV",
+		Platform:    "android",
+		PublicKey:   key,
+	})
+	if !decision.Eligible {
+		t.Fatalf("internationalized display name rejected: %+v", decision)
+	}
+}
+
 func TestEvaluateRejectsMissingFields(t *testing.T) {
 	decision := Evaluate(Request{})
 	if decision.Eligible || decision.ReasonCode != "INVALID_REQUEST" {
@@ -71,5 +83,23 @@ func TestEvaluateRejectsOversizedDisplayName(t *testing.T) {
 	})
 	if decision.Eligible || decision.ReasonCode != "INVALID_DISPLAY_NAME" {
 		t.Fatalf("unexpected decision: %+v", decision)
+	}
+}
+
+func TestEvaluateRejectsUnsafeDisplayNameEncoding(t *testing.T) {
+	key := base64.StdEncoding.EncodeToString(bytes.Repeat([]byte{0x22}, 32))
+	for _, displayName := range []string{
+		"Kitchen\nTV",
+		"Kitchen\u202eTV",
+		string([]byte{0xff, 'T', 'V'}),
+	} {
+		decision := Evaluate(Request{
+			DisplayName: displayName,
+			Platform:    "android",
+			PublicKey:   key,
+		})
+		if decision.Eligible || decision.ReasonCode != "INVALID_DISPLAY_NAME" {
+			t.Fatalf("display name %q produced unexpected decision: %+v", displayName, decision)
+		}
 	}
 }

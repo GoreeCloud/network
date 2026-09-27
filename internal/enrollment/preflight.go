@@ -3,6 +3,8 @@ package enrollment
 import (
 	"encoding/base64"
 	"strings"
+	"unicode"
+	"unicode/utf8"
 )
 
 const maxDisplayNameBytes = 128
@@ -52,6 +54,9 @@ func Evaluate(request Request) Decision {
 	if displayName == "" || platform == "" || publicKey == "" {
 		return deny("INVALID_REQUEST", "displayName, platform, and publicKey are required")
 	}
+	if !validDisplayName(displayName) {
+		return deny("INVALID_DISPLAY_NAME", "displayName contains invalid or unsafe control characters")
+	}
 	if len([]byte(displayName)) > maxDisplayNameBytes {
 		return deny("INVALID_DISPLAY_NAME", "displayName exceeds the Development enrollment limit")
 	}
@@ -79,6 +84,29 @@ func Evaluate(request Request) Decision {
 
 func deny(code, reason string) Decision {
 	return Decision{Eligible: false, ReasonCode: code, Reason: reason}
+}
+
+func validDisplayName(value string) bool {
+	if !utf8.ValidString(value) {
+		return false
+	}
+	for _, r := range value {
+		if unicode.IsControl(r) || unsafeDisplayFormatRune(r) {
+			return false
+		}
+	}
+	return true
+}
+
+func unsafeDisplayFormatRune(r rune) bool {
+	switch r {
+	case '؜', '‎', '‏',
+		'‪', '‫', '‬', '‭', '‮',
+		'⁦', '⁧', '⁨', '⁩':
+		return true
+	default:
+		return false
+	}
 }
 
 func allZero(value []byte) bool {

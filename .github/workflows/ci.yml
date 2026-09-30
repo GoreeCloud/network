@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: native-network-ci-${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  group: native-network-ci-${{ github.workflow }}-${{ github.event_name }}-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
@@ -74,7 +74,8 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
+      - name: Provision Android SDK command-line tools
+        uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4.0.4
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '9.5.0'
